@@ -1,3 +1,0 @@
-"id","uuid","deleted","deleted_at","created_at","updated_at","is_active","name","account_number","type","scope","balance","last_reconciled_balance","last_reconciled_date","bank_name","branch","description","created_by_id","deleted_by_id","updated_by_id","user_id","business_id"
-"1","434ff9ba-2913-45d3-a985-42f1c419ee88",False,NULL,"2025-07-08 06:24:12.512743+00","2025-07-08 06:48:13.798851+00",True,"CRDB account","1272384849404","bank","general","6133788.47","0.00",NULL,"","","","1",NULL,"1","1",NULL
-"34","2dbbe566-f21d-4069-8869-ebc990c903d3",False,NULL,"2025-07-08 06:56:19.58935+00","2025-07-08 06:56:19.589362+00",True,"Cash","0749059816","cash","general","0.00","0.00",NULL,"","","","1",NULL,"1","1",NULL

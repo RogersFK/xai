@@ -1,0 +1,29 @@
+{
+  "cSpell.words": [
+    "autoflush",
+    "checkpw",
+    "factuals",
+    "gensalt",
+    "hashpw",
+    "highlightbackground",
+    "highlightcolor",
+    "highlightthickness",
+    "insertbackground",
+    "ipady",
+    "kfil",
+    "padx",
+    "pady",
+    "prehash",
+    "relheight",
+    "relwidth",
+    "relx",
+    "scrollregion",
+    "selectbackground",
+    "selectforeground",
+    "sessionmaker",
+    "textvariable",
+    "topbar",
+    "wraplength",
+    "yscrollcommand"
+  ]
+}

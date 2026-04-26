@@ -1,0 +1,2 @@
+"id","uuid","created_at","updated_at","status","is_deleted","deleted_at","provider_status","category","bio","is_profile_complete","is_verified","company_id","created_by_id","deleted_by_id","updated_by_id","user_account_id"
+"1","cafd7d22-5711-4909-83e1-836416ceb947","2026-01-12 13:07:50.170839+00","2026-01-12 13:15:10.825381+00",True,False,"2026-01-12 13:15:10.825387+00","INDEPENDENT","Tax Consultant","",True,False,"1",NULL,NULL,NULL,"8231c0f8-76ec-464a-b91c-39e39328a681"

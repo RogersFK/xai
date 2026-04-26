@@ -1,0 +1,220 @@
+{
+  "uuid": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "processKey": "Safari",
+  "processName": "Safari Process",
+  "description": "Process for initializing tender to have threshold",
+  "workFlowProcessLoadedClasses": "Safari",
+  "shared": true,
+  "stages": [
+    {
+      "processUuid": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Staff",
+      "description": "Stage used by procurement officer",
+      "uuid": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "sortOrder": 1
+    },
+    {
+      "name": "Manager",
+      "description": "Head Of Procurement",
+      "uuid": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "sortOrder": 2
+    },
+    {
+      "name": "Director",
+      "description": "Accounting Officer",
+      "uuid": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "sortOrder": 3
+    },
+    {
+      "name": "DIRECTOR OF CORPORATE SERVICES",
+      "description": "DIRECTOR OF CORPORATE SERVICES",
+      "uuid": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "sortOrder": 4
+    }
+  ],
+  "taskDefinitions": [
+    {
+      "uuid": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+      "belongsToStage": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "startNode": true,
+      "evalCondition": null,
+      "isIndividualTask": false,
+      "assigneeId": null,
+      "groupId": null,
+      "locationId": null,
+      "branchId": null,
+      "taskName": "Submit Safari",
+      "description": "Submit Safari",
+      "groupCommonName": null,
+      "formKeysAllowed": null,
+      "flows": [
+        {
+          "uuid": "a7b8c9d0-e1f2-4a3b-5c6d-7e8f9a0b1c2d",
+          "action": "SUBMIT",
+          "processEnds": false,
+          "isProcessEndPositively": false,
+          "usedForStartingOnly": true,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": "b8c9d0e1-f2a3-4b5c-6d7e-8f9a0b1c2d3e",
+          "nextEffectiveModelStatus": "SUBMITTED"
+        },
+        {
+          "uuid": "c9d0e1f2-a3b4-4c5d-6e7f-9a0b1c2d3e4f",
+          "action": "CANCEL",
+          "processEnds": true,
+          "isProcessEndPositively": false,
+          "usedForStartingOnly": true,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": null,
+          "nextEffectiveModelStatus": "CANCELLED"
+        }
+      ]
+    },
+    {
+      "uuid": "b8c9d0e1-f2a3-4b5c-6d7e-8f9a0b1c2d3e",
+      "belongsToStage": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "startNode": true,
+      "evalCondition": null,
+      "isIndividualTask": false,
+      "assigneeId": null,
+      "groupId": null,
+      "locationId": null,
+      "branchId": null,
+      "taskName": "Review APP",
+      "description": "Review Safari",
+      "groupCommonName": "MANAGER",
+      "formKeysAllowed": null,
+      "workFlowTaskRiskLevel": "LEVEL_1",
+      "flows": [
+        {
+          "uuid": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+          "action": "SUBMIT",
+          "processEnds": false,
+          "isProcessEndPositively": false,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "usedForStartingOnly": true,
+          "nextTaskDefinition": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+          "nextEffectiveModelStatus": "SUBMITTED"
+        },
+        {
+          "uuid": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+          "action": "CANCEL",
+          "processEnds": true,
+          "isProcessEndPositively": false,
+          "usedForStartingOnly": true,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": null,
+          "nextEffectiveModelStatus": "CANCELLED"
+        },
+        {
+          "uuid": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+          "action": "REJECT",
+          "processEnds": false,
+          "isProcessEndPositively": false,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+          "nextEffectiveModelStatus": "REJECTED"
+        },
+        {
+          "uuid": "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e",
+          "action": "REVIEW",
+          "processEnds": false,
+          "isProcessEndPositively": false,
+          "evalCondition": "#estimatedBudget < 500000000",
+          "useEvalExpression": true,
+          "nextTaskDefinition": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+          "nextEffectiveModelStatus": "REVIEWED"
+        },
+        {
+          "uuid": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+          "action": "APPROVE",
+          "processEnds": true,
+          "isProcessEndPositively": true,
+          "evalCondition": "#estimatedBudget > 500000000",
+          "useEvalExpression": true,
+          "nextTaskDefinition": null,
+          "nextEffectiveModelStatus": "APPROVED"
+        }
+      ]
+    },
+    {
+      "uuid": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "belongsToStage": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "evalCondition": null,
+      "isIndividualTask": false,
+      "assigneeId": null,
+      "groupId": null,
+      "locationId": null,
+      "branchId": null,
+      "taskName": "Approve Safari",
+      "description": "Safari Approval",
+      "groupCommonName": "DIRECTOR",
+      "formKeysAllowed": null,
+      "workFlowTaskRiskLevel": "LEVEL_3",
+      "flows": [
+        {
+          "uuid": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+          "action": "RECOMMEND",
+          "processEnds": false,
+          "isProcessEndPositively": false,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+          "nextEffectiveModelStatus": "RECOMMENDED"
+        },
+        {
+          "uuid": "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e",
+          "action": "NOT RECOMMEND",
+          "processEnds": false,
+          "isProcessEndPositively": false,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+          "nextEffectiveModelStatus": "NOT RECOMMENDED"
+        }
+      ]
+    },
+    {
+      "uuid": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "belongsToStage": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "evalCondition": null,
+      "isIndividualTask": false,
+      "assigneeId": null,
+      "groupId": null,
+      "locationId": null,
+      "branchId": null,
+      "taskName": "DIRECTOR OF CORPORATE SERVICES",
+      "description": "DIRECTOR OF CORPORATE SERVICES",
+      "groupCommonName": "DIRECTOR_CORPORATE_SERVICES",
+      "formKeysAllowed": null,
+      "workFlowTaskRiskLevel": "LEVEL_3",
+      "flows": [
+        {
+          "uuid": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+          "action": "APPROVE",
+          "processEnds": true,
+          "isProcessEndPositively": true,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": null,
+          "nextEffectiveModelStatus": "APPROVED"
+        },
+        {
+          "uuid": "d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a",
+          "action": "REJECT",
+          "processEnds": false,
+          "isProcessEndPositively": false,
+          "evalCondition": null,
+          "useEvalExpression": false,
+          "nextTaskDefinition": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+          "nextEffectiveModelStatus": "REJECTED"
+        }
+      ]
+    }
+  ]
+}

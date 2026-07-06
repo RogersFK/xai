@@ -99,20 +99,6 @@ def _build_artifacts(threat_events: list, db: Session = None) -> list:
     return result
 
 
-# def _build_artifacts(threat_events: list) -> list:
-#     return [
-#         {
-#             "timestamp": te.occurred_at.strftime("%Y-%m-%d %H:%M:%S")
-#                          if te.occurred_at else "—",
-#             "source":    te.username or te.source_ip or "UNKNOWN",
-#             "action":    te.event_type,
-#             "status":    te.severity.upper(),
-#         }
-#         for te in threat_events
-#     ]
-
-
-
 def generate_report(db: Session, analysis_id: int, user_id: int) -> Report:
     analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
     if not analysis:
@@ -335,13 +321,11 @@ def generate_pdf_bytes(report: Report) -> bytes:
     vectors    = report.threat_vectors    or []
     story      = []
 
-    # ── header ────────────────────────────────────────────────
     story.append(Paragraph("XAI FORENSICS SYSTEM", meta_style))
     story.append(Paragraph("CLASSIFIED FORENSIC REPORT", title_style))
     story.append(Paragraph(report.title or "Forensic Report", title_style))
     story.append(Spacer(1, 0.4*cm))
 
-    # ── metadata table ────────────────────────────────────────
     meta_data = [
         ["Case Number",     report.case_number or "—"],
         ["Status",          (report.status or "draft").upper()],
@@ -369,11 +353,9 @@ def generate_pdf_bytes(report: Report) -> bytes:
     story.append(meta_table)
     story.append(Spacer(1, 0.5*cm))
 
-    # ── I. executive summary ──────────────────────────────────
     story.append(Paragraph("I. EXECUTIVE SUMMARY", heading_style))
     story.append(Paragraph(report.executive_summary or "—", body_style))
 
-    # ── II. overall log file status ───────────────────────────
     story.append(Paragraph("II. OVERALL LOG FILE STATUS", heading_style))
 
     total_events  = len(artifacts)
@@ -411,7 +393,6 @@ def generate_pdf_bytes(report: Report) -> bytes:
     story.append(status_table)
     story.append(Spacer(1, 0.3*cm))
 
-    # ── III. threat vector distribution ──────────────────────
     story.append(Paragraph("III. THREAT VECTOR DISTRIBUTION", heading_style))
     if vectors:
         vec_data = [["Threat Vector", "Percentage"]] + [
@@ -433,7 +414,6 @@ def generate_pdf_bytes(report: Report) -> bytes:
     else:
         story.append(Paragraph("No threat vectors recorded.", body_style))
 
-    # ── IV. critical artifacts overview ───────────────────────
     story.append(Paragraph("IV. CRITICAL ARTIFACTS OVERVIEW", heading_style))
     if artifacts:
         art_data = [["Timestamp", "Source", "Action", "Status"]] + [
@@ -469,11 +449,8 @@ def generate_pdf_bytes(report: Report) -> bytes:
     else:
         story.append(Paragraph("No critical artifacts recorded.", body_style))
 
-    # ── V. event details (all events including normal) ────────
     story.append(Paragraph("V. DETAILED EVENT ANALYSIS", heading_style))
 
-    # pull full events from raw_response stored in analysis if available
-    # artifacts already contains per-event data — we use it enriched
     _STATUS_LABEL = {
         "CRITICAL": ("CRITICAL", COL_ERROR),
         "HIGH":     ("HIGH",     COL_ERROR),
@@ -592,7 +569,6 @@ def generate_pdf_bytes(report: Report) -> bytes:
     else:
         story.append(Paragraph("No events to display.", body_style))
 
-    # ── VI. recommendations ───────────────────────────────────
     story.append(Paragraph("VI. RECOMMENDATIONS", heading_style))
 
     _RECS = {
@@ -685,14 +661,12 @@ def generate_pdf_bytes(report: Report) -> bytes:
         story.append(rec_table)
         story.append(Spacer(1, 0.2*cm))
 
-    # ── VII. chain of custody ─────────────────────────────────
     story.append(Spacer(1, 0.4*cm))
     story.append(Paragraph("VII. CHAIN OF CUSTODY", heading_style))
     coc_text = report.chain_of_custody or "No custody record."
     for line in coc_text.split("\n"):
         story.append(Paragraph(line or " ", body_style))
 
-    # ── footer ────────────────────────────────────────────────
     story.append(Spacer(1, 1*cm))
     story.append(Paragraph(
         "AUTHORIZED USE ONLY — All actions are logged and audited "
@@ -701,141 +675,6 @@ def generate_pdf_bytes(report: Report) -> bytes:
 
     doc.build(story)
     return buffer.getvalue()
-
-
-# def generate_pdf_bytes(report: Report) -> bytes:
-#     buffer = BytesIO()
-#     doc    = SimpleDocTemplate(
-#         buffer, pagesize=A4,
-#         rightMargin=2*cm, leftMargin=2*cm,
-#         topMargin=2*cm,   bottomMargin=2*cm
-#     )
-
-#     title_style = ParagraphStyle("title",
-#         fontSize=18, fontName="Helvetica-Bold",
-#         textColor=colors.HexColor("#D4AF37"), spaceAfter=6)
-#     heading_style = ParagraphStyle("heading",
-#         fontSize=10, fontName="Helvetica-Bold",
-#         textColor=colors.HexColor("#D4AF37"),
-#         spaceAfter=6, spaceBefore=14)
-#     body_style = ParagraphStyle("body",
-#         fontSize=9,  fontName="Helvetica",
-#         textColor=colors.HexColor("#222222"),
-#         spaceAfter=6, leading=14)
-#     meta_style = ParagraphStyle("meta",
-#         fontSize=7,  fontName="Helvetica",
-#         textColor=colors.HexColor("#666666"), spaceAfter=3)
-
-#     mc      = report.metric_card or {}
-#     story   = []
-
-#     story.append(Paragraph("XAI FORENSICS SYSTEM", meta_style))
-#     story.append(Paragraph("CLASSIFIED FORENSIC REPORT", title_style))
-#     story.append(Paragraph(report.title or "Forensic Report", title_style))
-#     story.append(Spacer(1, 0.4*cm))
-
-#     meta_data = [
-#         ["Case Number",     report.case_number or "—"],
-#         ["Status",          (report.status or "draft").upper()],
-#         ["Clearance Level", f"Level {report.clearance_level or '—'}"],
-#         ["Generated",       str(report.generated_at or "")[:19]],
-#         ["Signed At",       str(report.signed_at or "Not signed")[:19]],
-#         ["SHA-256",         (mc.get("hash_sha256") or "Not signed")[:48] + "…"
-#                             if len(mc.get("hash_sha256") or "") > 48
-#                             else mc.get("hash_sha256") or "Not signed"],
-#         ["Signed By",       mc.get("signed_by") or "—"],
-#         ["Integrity Score", f"{mc.get('integrity_score', 0):.1f}%"],
-#         ["Total Artifacts", str(mc.get("total_artifacts", 0))],
-#         ["Critical Alerts", str(mc.get("alerts_critical", 0))],
-#     ]
-#     meta_table = Table(meta_data, colWidths=[4*cm, 13*cm])
-#     meta_table.setStyle(TableStyle([
-#         ("BACKGROUND",     (0, 0), (0, -1), colors.HexColor("#F5F5F5")),
-#         ("BACKGROUND",     (1, 0), (1, -1), colors.white),
-#         ("TEXTCOLOR",      (0, 0), (0, -1), colors.HexColor("#333333")),
-#         ("TEXTCOLOR",      (1, 0), (1, -1), colors.HexColor("#111111")),
-#         ("FONTNAME",       (0, 0), (0, -1), "Helvetica-Bold"),
-#         ("FONTSIZE",       (0, 0), (-1, -1), 8),
-#         ("ROWBACKGROUNDS", (0, 0), (-1, -1),
-#          [colors.HexColor("#F9F9F9"), colors.white]),
-#         ("GRID",           (0, 0), (-1, -1), 0.5,
-#          colors.HexColor("#CCCCCC")),
-#         ("PADDING",        (0, 0), (-1, -1), 6),
-#     ]))
-#     story.append(meta_table)
-#     story.append(Spacer(1, 0.5*cm))
-
-#     story.append(Paragraph("I. EXECUTIVE SUMMARY", heading_style))
-#     story.append(Paragraph(report.executive_summary or "—", body_style))
-
-#     story.append(Paragraph("II. THREAT VECTOR DISTRIBUTION", heading_style))
-#     vectors = report.threat_vectors or []
-#     if vectors:
-#         vec_data = [["Threat Vector", "Percentage"]] + [
-#             [v.get("label", "—"), f"{v.get('percentage', 0):.1f}%"]
-#             for v in vectors
-#         ]
-#         vec_table = Table(vec_data, colWidths=[11*cm, 6*cm])
-#         vec_table.setStyle(TableStyle([
-#             ("BACKGROUND",     (0, 0), (-1, 0),
-#              colors.HexColor("#D4AF37")),
-#             ("TEXTCOLOR",      (0, 0), (-1, 0), colors.black),
-#             ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
-#             ("FONTSIZE",       (0, 0), (-1, -1), 8),
-#             ("ROWBACKGROUNDS", (0, 1), (-1, -1),
-#              [colors.HexColor("#F9F9F9"), colors.white]),
-#             ("TEXTCOLOR",      (0, 1), (-1, -1),
-#              colors.HexColor("#222222")),
-#             ("GRID",           (0, 0), (-1, -1), 0.5,
-#              colors.HexColor("#CCCCCC")),
-#             ("PADDING",        (0, 0), (-1, -1), 6),
-#         ]))
-#         story.append(vec_table)
-#     else:
-#         story.append(Paragraph("No threat vectors recorded.", body_style))
-
-#     story.append(Paragraph("III. CRITICAL ARTIFACTS", heading_style))
-#     artifacts = report.critical_artifacts or []
-#     if artifacts:
-#         art_data = [["Timestamp", "Source", "Action", "Status"]] + [
-#             [a.get("timestamp", "—"), a.get("source", "—"),
-#              a.get("action",    "—"), a.get("status", "—")]
-#             for a in artifacts
-#         ]
-#         art_table = Table(art_data, colWidths=[4*cm, 4*cm, 7*cm, 2*cm])
-#         art_table.setStyle(TableStyle([
-#             ("BACKGROUND",     (0, 0), (-1, 0),
-#              colors.HexColor("#D4AF37")),
-#             ("TEXTCOLOR",      (0, 0), (-1, 0), colors.black),
-#             ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
-#             ("FONTSIZE",       (0, 0), (-1, -1), 7),
-#             ("ROWBACKGROUNDS", (0, 1), (-1, -1),
-#              [colors.HexColor("#F9F9F9"), colors.white]),
-#             ("TEXTCOLOR",      (0, 1), (-1, -1),
-#              colors.HexColor("#222222")),
-#             ("GRID",           (0, 0), (-1, -1), 0.5,
-#              colors.HexColor("#CCCCCC")),
-#             ("PADDING",        (0, 0), (-1, -1), 5),
-#         ]))
-#         story.append(art_table)
-#     else:
-#         story.append(Paragraph("No critical artifacts recorded.", body_style))
-
-#     story.append(Spacer(1, 0.4*cm))
-#     story.append(Paragraph("IV. CHAIN OF CUSTODY", heading_style))
-#     coc_text = (report.chain_of_custody or "No custody record.")
-#     for line in coc_text.split("\n"):
-#         story.append(Paragraph(line or " ", body_style))
-
-#     story.append(Spacer(1, 1*cm))
-#     story.append(Paragraph(
-#         "AUTHORIZED USE ONLY — All actions are logged and audited "
-#         "by the XAI Digital Forensics Authority.",
-#         meta_style))
-
-#     doc.build(story)
-#     return buffer.getvalue()
-
 
 
 def encrypt_pdf(pdf_bytes: bytes) -> tuple[bytes, str]:

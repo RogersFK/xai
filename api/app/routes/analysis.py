@@ -15,8 +15,6 @@ router = APIRouter(prefix="/analysis", tags=["Analysis"])
 bearer = HTTPBearer()
 
 
-
-
 @router.post("/run")
 def run(
     log_id:       int,

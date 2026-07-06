@@ -1,10 +1,9 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import filedialog
 import threading
 from tkinter import messagebox
 import requests
 import os
-import json
 from colors import Palette
 from components import GoldButton, SHAPBar, AnimatedProgressBar
 from helper import api, upload
@@ -477,29 +476,58 @@ class EventDetailPanel(tk.Toplevel):
                  fg=Palette.ON_SURFACE_VAR,
                  bg=Palette.SURFACE_LOW).pack(anchor="w")
         
+    # def _build_recommendations(self, parent):
+    #     e  = self._event
+    #     event_type = e.get("type", e.get("event_type", "")).strip()
+        
+        
+
+    #     _FAMILY_MAP = {
+    #         "SSH Brute Force":      "R2L",
+    #         "Lateral Movement":     "R2L",
+    #         "Data Exfiltration":    "R2L",
+    #         "Elevated Privileges":  "U2R",
+    #         "Privilege Escalation": "U2R",
+    #         "C2 Beaconing":         "R2L",
+    #         "DoS":                  "DoS",
+    #         "Probe":                "Probe",
+    #         "R2L":                  "R2L",
+    #         "U2R":                  "U2R",
+    #         "Normal":               "Normal",
+    #     }
+        
+    #     print(f"************************* the map is {_FAMILY_MAP.get(event_type, event_type)}")
+
+    #     family = _FAMILY_MAP.get(event_type, event_type)
+    #     recs   = self._RECOMMENDATIONS.get(family, self._RECOMMENDATIONS_DEFAULT)
+
+    #     self._section(parent, "RECOMMENDED ACTIONS")
     def _build_recommendations(self, parent):
-        e  = self._event
+        e          = self._event
         event_type = e.get("type", e.get("event_type", "")).strip()
+        status     = e.get("status", "").upper()
 
-        _FAMILY_MAP = {
-            "SSH Brute Force":      "R2L",
-            "Lateral Movement":     "R2L",
-            "Data Exfiltration":    "R2L",
-            "Elevated Privileges":  "U2R",
-            "Privilege Escalation": "U2R",
-            "C2 Beaconing":         "R2L",
-            "DoS":                  "DoS",
-            "Probe":                "Probe",
-            "R2L":                  "R2L",
-            "U2R":                  "U2R",
-            "Normal":               "Normal",
-        }
+        # skip recommendations for normal/low events
+        if status in ("LOW", "NORMAL", "BENIGN") or not event_type:
+            return
 
-        family = _FAMILY_MAP.get(event_type, event_type)
-        recs   = self._RECOMMENDATIONS.get(family, self._RECOMMENDATIONS_DEFAULT)
+        # extract family from detailed type string e.g. "R2L — SSH Brute Force" → "R2L"
+        family = None
+        for fam in ("DoS", "Probe", "R2L", "U2R", "Normal"):
+            if event_type.startswith(fam):
+                family = fam
+                break
+
+        # fallback — also check the family field directly
+        if not family:
+            family = e.get("family", "")
+
+        if not family or family == "Normal":
+            return
+
+        recs = self._RECOMMENDATIONS.get(family, self._RECOMMENDATIONS_DEFAULT)
 
         self._section(parent, "RECOMMENDED ACTIONS")
-
         container = tk.Frame(parent, bg=Palette.SURFACE,
                             padx=Palette.PAD_LG, pady=Palette.PAD_SM)
         container.pack(fill="x", pady=(0, Palette.PAD_MD))
@@ -565,88 +593,7 @@ class EventDetailPanel(tk.Toplevel):
                 anchor="w",
             ).pack(side="left", fill="x", expand=True)     
         
-    # def _build_recommendations(self, parent):
-    #     e  = self._event
-    #     event_type  = e.get("type", e.get("event_type", "")).strip()
-
-    #     # map event_type to family
-    #     _FAMILY_MAP = {
-    #         "SSH Brute Force":       "R2L",
-    #         "Lateral Movement":      "R2L",
-    #         "Data Exfiltration":     "R2L",
-    #         "Elevated Privileges":   "U2R",
-    #         "Privilege Escalation":  "U2R",
-    #         "C2 Beaconing":          "R2L",
-    #         "DoS":                   "DoS",
-    #         "Probe":                 "Probe",
-    #         "R2L":                   "R2L",
-    #         "U2R":                   "U2R",
-    #         "Normal":                "Normal",
-    #     }
-
-    #     family = _FAMILY_MAP.get(event_type, event_type)
-    #     recs   = self._RECOMMENDATIONS.get(family, self._RECOMMENDATIONS_DEFAULT)
-
-    #     self._section(parent, "RECOMMENDED ACTIONS")
-
-    #     container = tk.Frame(parent, bg=Palette.SURFACE,
-    #                         padx=Palette.PAD_LG, pady=Palette.PAD_SM)
-    #     container.pack(fill="x", pady=(0, Palette.PAD_MD))
-
-    #     _URGENCY_BG = {
-    #         "IMMEDIATE": "#2a1515",
-    #         "24 HOURS":  "#2a2010",
-    #         "LONG TERM": "#152015",
-    #         "INFO":      "#151a2a",
-    #     }
-
-    #     for i, (urgency, text, color) in enumerate(recs, start=1):
-    #         row = tk.Frame(
-    #             container,
-    #             bg=_URGENCY_BG.get(urgency, Palette.SURFACE_CONTAINER),
-    #             padx=Palette.PAD_MD,
-    #             pady=Palette.PAD_SM,
-    #         )
-    #         row.pack(fill="x", pady=2)
-
-    #         # step number
-    #         tk.Label(
-    #             row,
-    #             text=f"{i:02d}",
-    #             font=Palette.bold(Palette.MICRO),
-    #             fg=color,
-    #             bg=_URGENCY_BG.get(urgency, Palette.SURFACE_CONTAINER),
-    #             width=3,
-    #             anchor="w",
-    #         ).pack(side="left")
-
-    #         # urgency badge
-    #         badge_frame = tk.Frame(
-    #             row,
-    #             bg=color,
-    #             padx=6,
-    #             pady=1,
-    #         )
-    #         badge_frame.pack(side="left", padx=(0, Palette.PAD_SM))
-    #         tk.Label(
-    #             badge_frame,
-    #             text=urgency,
-    #             font=Palette.bold(Palette.MICRO),
-    #             fg=Palette.SURFACE,
-    #             bg=color,
-    #         ).pack()
-
-    #         # recommendation text
-    #         tk.Label(
-    #             row,
-    #             text=text,
-    #             font=Palette.font(Palette.LABEL_SM),
-    #             fg=Palette.ON_SURFACE,
-    #             bg=_URGENCY_BG.get(urgency, Palette.SURFACE_CONTAINER),
-    #             wraplength=520,
-    #             justify="left",
-    #             anchor="w",
-    #         ).pack(side="left", fill="x", expand=True)    
+ 
 
     @staticmethod
     def _fmt_bytes(b: int) -> str:

@@ -274,7 +274,6 @@ _FEATURE_DEFAULTS = {
     "dst_host_rerror_rate": 0.0, "dst_host_srv_rerror_rate": 0.0,
 }
 
-# ── compiled patterns ──────────────────────────────────────────────────────────
 _P = {
     # auth
     "ssh_fail":    re.compile(
@@ -319,7 +318,6 @@ _P = {
 }
 
 
-# ── pass-1 counters ────────────────────────────────────────────────────────────
 
 def _scan_lines(lines: list[str]) -> tuple[dict, dict, dict, dict, dict, set]:
     ip_fail_counts  = defaultdict(int)
@@ -369,7 +367,6 @@ def _scan_lines(lines: list[str]) -> tuple[dict, dict, dict, dict, dict, set]:
     return ip_fail_counts, ip_sudo_counts, ip_users, ip_ports, ip_lines, dos_ips
 
 
-# ── event builders ─────────────────────────────────────────────────────────────
 
 def _make_dos_event(src_ip: str, fail_count: int) -> dict:
     feat = dict(_FEATURE_DEFAULTS)
@@ -597,7 +594,6 @@ def _make_login_event(src_ip: str, username: str,
     }
 
 
-# ── main parser ────────────────────────────────────────────────────────────────
 
 def parse_log_file(raw_text: str) -> list[dict]:
     lines = [l for l in raw_text.splitlines()
@@ -610,7 +606,6 @@ def parse_log_file(raw_text: str) -> list[dict]:
     events      = []
     processed   = set()
 
-    # ── 1. DoS events ─────────────────────────────────────────────
     for ip in dos_ips:
         key = ("dos", ip)
         if key in processed:
@@ -619,7 +614,6 @@ def parse_log_file(raw_text: str) -> list[dict]:
         fail_count = ip_fail_counts.get(ip, 100)
         events.append(_make_dos_event(ip, max(fail_count, 100)))
 
-    # ── 2. Probe events ───────────────────────────────────────────
     for ip, ports in ip_ports.items():
         if len(ports) >= 8 and ip not in dos_ips:
             key = ("probe", ip)
@@ -630,7 +624,6 @@ def parse_log_file(raw_text: str) -> list[dict]:
                 ip, ports, ip_fail_counts.get(ip, len(ports))
             ))
 
-    # ── 3. SSH brute force (R2L) ──────────────────────────────────
     for line in lines:
         m = _P["ssh_fail"].search(line)
         if not m:
@@ -663,7 +656,6 @@ def parse_log_file(raw_text: str) -> list[dict]:
                 src_ip, fail_count, unique_users, port_val
             ))
 
-    # ── 4. Successful logins ──────────────────────────────────────
     for line in lines:
         m = _P["ssh_accept"].search(line)
         if not m:
@@ -676,7 +668,6 @@ def parse_log_file(raw_text: str) -> list[dict]:
         prior_fails = ip_fail_counts.get(src_ip, 0)
         events.append(_make_login_event(src_ip, username, prior_fails))
 
-    # ── 5. Sudo / U2R events ──────────────────────────────────────
     for line in lines:
         m = _P["sudo"].search(line)
         if not m:
@@ -725,7 +716,6 @@ def parse_log_file(raw_text: str) -> list[dict]:
     return events
 
 
-# ── feature matrix ─────────────────────────────────────────────────────────────
 
 def events_to_matrix(events: list[dict], feature_cols: list[str],
                      encoders: dict) -> np.ndarray:

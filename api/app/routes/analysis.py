@@ -7,7 +7,6 @@ from app.core.dependencies import get_current_user
 from app.db.session import get_db
 from app.core.security import decode_token
 from app.models.user import User
-from app.schemas.analysis import AnalysisRunOut, AnalysisHistoryItem
 from app.services.analysis_service import (
     run_analysis, get_analysis, list_analyses, format_analysis_out
 )

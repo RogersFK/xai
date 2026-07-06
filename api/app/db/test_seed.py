@@ -1,13 +1,8 @@
-"""
-Test seeder — populates all tables with realistic-looking fake data.
-Remove this file and its call in create_app() before going to production.
-"""
 from datetime import datetime, timedelta
 import random
 from sqlalchemy.orm import Session
-
 from app.models.user import User
-from app.models.role import Role, Permission, UserRole, RolePermission
+from app.models.role import Role, UserRole
 from app.models.log_file import LogFile
 from app.models.analysis import Analysis
 from app.models.threat_event import ThreatEvent
@@ -18,8 +13,6 @@ from app.models.alert import Alert
 from app.models.audit_log import AuditLog
 from app.core.security import hash_password
 
-
-# ── helpers ───────────────────────────────────────────────────────────────────
 
 def _already_seeded(db: Session) -> bool:
     """Skip entirely if test data already exists."""
@@ -40,7 +33,6 @@ def _random_dt(days_back=30):
     )
 
 
-# ── main entry ────────────────────────────────────────────────────────────────
 
 def run_test_seed(db: Session) -> None:
     if _already_seeded(db):
@@ -61,7 +53,6 @@ def run_test_seed(db: Session) -> None:
     print("[TEST SEED] Done.")
 
 
-# ── model versions ────────────────────────────────────────────────────────────
 
 def _seed_model_versions(db: Session) -> list:
     versions = [
@@ -106,7 +97,6 @@ def _seed_model_versions(db: Session) -> list:
     return versions
 
 
-# ── users ─────────────────────────────────────────────────────────────────────
 
 def _seed_users(db: Session) -> list:
     # fetch roles created by the main seeder
@@ -114,11 +104,11 @@ def _seed_users(db: Session) -> list:
     viewer_role  = db.query(Role).filter(Role.name == "viewer").first()
 
     test_users = [
-        {"username": "j.doe_admin",   "email": "jdoe@xai.local",    "role": analyst_role},
-        {"username": "s.agent_04",    "email": "sagent@xai.local",   "role": analyst_role},
-        {"username": "backup_task",   "email": "backup@xai.local",   "role": viewer_role},
-        {"username": "unknown_user",  "email": "unknown@xai.local",  "role": viewer_role},
-        {"username": "m.chen_sec",    "email": "mchen@xai.local",    "role": analyst_role},
+        # {"username": "j.doe_admin",   "email": "jdoe@xai.local",    "role": analyst_role},
+        # {"username": "s.agent_04",    "email": "sagent@xai.local",   "role": analyst_role},
+        # {"username": "backup_task",   "email": "backup@xai.local",   "role": viewer_role},
+        # {"username": "unknown_user",  "email": "unknown@xai.local",  "role": viewer_role},
+        # {"username": "m.chen_sec",    "email": "mchen@xai.local",    "role": analyst_role},
     ]
 
     created = []
@@ -147,7 +137,6 @@ def _seed_users(db: Session) -> list:
     return created
 
 
-# ── log files ─────────────────────────────────────────────────────────────────
 
 def _seed_log_files(db: Session, users: list) -> list:
     sources = [
@@ -179,7 +168,6 @@ def _seed_log_files(db: Session, users: list) -> list:
     return created
 
 
-# ── analyses ──────────────────────────────────────────────────────────────────
 
 def _seed_analyses(db: Session, users, log_files, model_versions) -> list:
     severities   = ["critical", "high", "medium", "low", "none"]
@@ -236,7 +224,6 @@ def _seed_analyses(db: Session, users, log_files, model_versions) -> list:
     return created
 
 
-# ── threat events ─────────────────────────────────────────────────────────────
 
 def _seed_threat_events(db: Session, analyses: list) -> list:
     event_types = [
@@ -288,7 +275,6 @@ def _seed_threat_events(db: Session, analyses: list) -> list:
     return created
 
 
-# ── explanations ──────────────────────────────────────────────────────────────
 
 def _seed_explanations(db: Session, analyses: list, threat_events: list) -> None:
     narratives = [
@@ -336,7 +322,6 @@ def _seed_explanations(db: Session, analyses: list, threat_events: list) -> None
     db.commit()
 
 
-# ── reports ───────────────────────────────────────────────────────────────────
 
 def _seed_reports(db: Session, analyses: list, users: list) -> None:
     admin = db.query(User).filter(User.username == "admin").first()
@@ -351,7 +336,7 @@ def _seed_reports(db: Session, analyses: list, users: list) -> None:
         report = Report(
             analysis_id      = analysis.id,
             created_by       = creator_id,
-            title            = f"Forensic Incident Report: #XAI-2024-{str(i+1).zfill(3)}",
+            title            = f"Analysis Report: #XAI-2024-{str(i+1).zfill(3)}",
             case_number      = f"F-{str(i+1).zfill(3)}-ALPHA-{chr(65+i)}",
             status           = statuses[i % len(statuses)],
             hash_sha256      = f"8e9c349e{i:04x}2e2e2f31313{i}b8b8b8b8b8b8b8b8",
@@ -366,7 +351,6 @@ def _seed_reports(db: Session, analyses: list, users: list) -> None:
     db.commit()
 
 
-# ── alerts ────────────────────────────────────────────────────────────────────
 
 def _seed_alerts(db: Session, analyses: list, threat_events: list, users: list) -> None:
     levels      = ["critical", "high", "medium"]
@@ -397,7 +381,6 @@ def _seed_alerts(db: Session, analyses: list, threat_events: list, users: list) 
     db.commit()
 
 
-# ── audit logs ────────────────────────────────────────────────────────────────
 
 def _seed_audit_logs(db: Session, users: list) -> None:
     actions = [

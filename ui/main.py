@@ -17,6 +17,7 @@ from security import clear_tokens, load_tokens, save_tokens
 from helper import BASE_URL, api, clear_token, register_expiry_callback, set_token, session
 from admin import AdminPage
 from my_profile import ProfilePage
+from decrypt import DecryptPage
 from upload_logs import UploadLogsPage
 from logger import get_logger
 import requests
@@ -235,7 +236,7 @@ class App(tk.Tk):
         try:
             bar = TopBar(
                 parent,
-                title="XAI Digital Forensics System",
+                title="XAI Network Logs Analysis System",
                 agent=self._user,
                 role=role_label,              
                 search_placeholder="Search case ID or evidence...",
@@ -291,6 +292,7 @@ class App(tk.Tk):
             "Upload Logs": UploadLogsPage,
             "Admin":       AdminPage,         
             "Profile":     ProfilePage, 
+            "Decrypt":     DecryptPage,
         }
 
         if label in PAGE_MAP:

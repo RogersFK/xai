@@ -1,7 +1,9 @@
+from pathlib import Path
 import tkinter as tk
 import threading
 import requests
 from tkinter import messagebox
+from PIL import Image, ImageTk
 from colors import Palette
 from components import Components
 from helper import api
@@ -14,6 +16,21 @@ class RegisterPage(tk.Frame):
         self._on_back     = on_back       
         self._status_var  = tk.StringVar()
         self._build()
+        
+    def _resize_bg(self, event=None):
+        w = self._canvas.winfo_width()
+        h = self._canvas.winfo_height()
+        if w < 2 or h < 2:
+            return
+        img = self._bg_pil.resize((w, h), Image.LANCZOS)
+        self._bg_photo = ImageTk.PhotoImage(img)
+        self._canvas.delete("bg")
+        self._canvas.create_image(0, 0, anchor="nw", image=self._bg_photo, tags="bg")
+        self._canvas.tag_lower("bg")  # keep image behind everything
+
+    def _on_canvas_resize(self, event):
+        self._resize_bg()
+        self._canvas.coords(self._card_window, event.width // 2, event.height // 2)
 
 
     def _build(self):
@@ -21,32 +38,63 @@ class RegisterPage(tk.Frame):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=0)
 
-        wrap = tk.Frame(self, bg=Palette.SURFACE)
-        wrap.grid(row=0, column=0, sticky="nsew")
-        wrap.columnconfigure(0, weight=1)
-        wrap.rowconfigure(0, weight=1)
+        bg_path = Path(__file__).parent / "assets" / "picha.jpg"
+        self._bg_pil = Image.open(bg_path)
+        self._bg_photo = None
 
-        inner = tk.Frame(wrap, bg=Palette.SURFACE)
-        inner.grid(row=0, column=0)
+        self._canvas = tk.Canvas(self, highlightthickness=0)
+        self._canvas.grid(row=0, column=0, sticky="nsew")
+        self._canvas.bind("<Configure>", self._resize_bg)
+
+        # place the login card on top of the canvas using canvas.create_window
+        inner = tk.Frame(self._canvas, bg=Palette.SURFACE_CONTAINER,
+                        padx=Palette.PAD_LG, pady=Palette.PAD_LG)
+        self._card_window = self._canvas.create_window(
+            0, 0, anchor="center", window=inner
+        )
+        self._canvas.bind("<Configure>", self._on_canvas_resize)
 
         # logo
         logo_box = tk.Frame(inner, bg=Palette.SURFACE_LOW, padx=20, pady=14)
         logo_box.pack(pady=(0, Palette.PAD_MD))
-        tk.Label(logo_box, text="XAI",
-                 font=Palette.font(Palette.HEADLINE_SM + 4, "bold"),
-                 fg=Palette.PRIMARY, bg=Palette.SURFACE_LOW).pack()
+        # tk.Label(logo_box, text="XAI",
+        #          font=Palette.font(Palette.HEADLINE_SM + 4, "bold"),
+        #          fg=Palette.PRIMARY, bg=Palette.SURFACE_LOW).pack()
 
         Components.label(
-            inner, "XAI Forensics System",
+            inner, "XAI NETWORK LOGS SYSTEM",
             size=Palette.HEADLINE_SM + 2, weight="bold",
-            color=Palette.ON_SURFACE, bg=Palette.SURFACE
+            color=Palette.ON_SURFACE, bg=Palette.SURFACE_CONTAINER
         ).pack()
 
-        Components.label(
-            inner, "OPERATOR  ENROLLMENT",
-            size=Palette.LABEL_SM,
-            color=Palette.ON_SURFACE_VAR, bg=Palette.SURFACE
-        ).pack(pady=(4, Palette.PAD_LG))
+        # Components.label(
+        #     inner, "OPERATOR  ENROLLMENT",
+        #     size=Palette.LABEL_SM,
+        #     color=Palette.ON_SURFACE_VAR, bg=Palette.SURFACE
+        # ).pack(pady=(4, Palette.PAD_LG))
+        
+        
+        logo_path = Path(__file__).parent / "assets" / "head.jpg"
+        logo_pil = Image.open(logo_path).convert("RGBA")
+
+        screen_w = self.winfo_screenwidth()
+        size = int(screen_w * 0.08)  
+        size = max(60, min(size, 120)) 
+
+        logo_pil = logo_pil.resize((size, size), Image.LANCZOS)
+
+        mask = Image.new("L", (size, size), 0)
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, size, size), fill=255)
+
+        circular = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        circular.paste(logo_pil, mask=mask)
+
+        self._logo_photo = ImageTk.PhotoImage(circular)
+        tk.Label(inner, image=self._logo_photo, bg=Palette.SURFACE_CONTAINER, bd=0).pack(pady=(4, Palette.PAD_LG))
+        
+        
 
         # card
         card = tk.Frame(inner, bg=Palette.SURFACE_CONTAINER,
@@ -55,7 +103,7 @@ class RegisterPage(tk.Frame):
 
         # username
         Components.field_label(
-            card, "Investigator Identity",
+            card, "Enter username",
             fg=Palette.ON_SURFACE, bg=Palette.SURFACE_CONTAINER
         ).pack(fill="x", pady=(0, Palette.PAD_SM))
 
@@ -69,7 +117,7 @@ class RegisterPage(tk.Frame):
 
         # email
         Components.field_label(
-            card, "Contact Node",
+            card, "Enter email",
             fg=Palette.ON_SURFACE, bg=Palette.SURFACE_CONTAINER
         ).pack(fill="x", pady=(0, Palette.PAD_SM))
 
@@ -83,7 +131,7 @@ class RegisterPage(tk.Frame):
 
         # password
         Components.field_label(
-            card, "Access Protocol",
+            card, "Enter password",
             fg=Palette.ON_SURFACE, bg=Palette.SURFACE_CONTAINER
         ).pack(fill="x", pady=(0, Palette.PAD_SM))
 
@@ -97,7 +145,7 @@ class RegisterPage(tk.Frame):
 
         # confirm password
         Components.field_label(
-            card, "Confirm Protocol",
+            card, "Confirm password",
             fg=Palette.ON_SURFACE, bg=Palette.SURFACE_CONTAINER
         ).pack(fill="x", pady=(0, Palette.PAD_SM))
 

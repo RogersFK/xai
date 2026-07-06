@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import ttk, filedialog
 import threading
@@ -12,9 +11,6 @@ from helper import api, upload
 from logger import get_logger
 
 log = get_logger("ANALYSIS")
-
-
-# ── Scan History Panel ────────────────────────────────────────────────
 
 class ScanHistoryPanel(tk.Toplevel):
     def __init__(self, parent, on_load=None):
@@ -185,13 +181,56 @@ class ScanHistoryPanel(tk.Toplevel):
         threading.Thread(target=fetch, daemon=True).start()
 
 
-# ── Event Detail Panel ────────────────────────────────────────────────
-
 class EventDetailPanel(tk.Toplevel):
-    """
-    Full explainability breakdown for a single event.
-    Shows verdict, SHAP features, counterfactuals, raw evidence.
-    """
+    
+    _RECOMMENDATIONS = {
+        "DoS": [
+            ("IMMEDIATE",  "Block source IP at firewall level immediately.",                          Palette.ERROR),
+            ("IMMEDIATE",  "Enable SYN cookies on the affected host to mitigate flood attacks.",      Palette.ERROR),
+            ("24 HOURS",   "Implement rate limiting on affected ports and services.",                  Palette.WARNING),
+            ("24 HOURS",   "Contact upstream ISP to apply null-routing on the attacking IP range.",    Palette.WARNING),
+            ("LONG TERM",  "Deploy a DDoS mitigation service or scrubbing center.",                    Palette.SUCCESS),
+            ("LONG TERM",  "Review and harden network architecture with redundant failover paths.",    Palette.SUCCESS),
+        ],
+        "Probe": [
+            ("IMMEDIATE",  "Identify and close all unused open ports on the scanned host.",            Palette.ERROR),
+            ("IMMEDIATE",  "Add the scanning IP to the firewall block list.",                          Palette.ERROR),
+            ("24 HOURS",   "Enable port scan detection on IDS/IPS and tune alert thresholds.",        Palette.WARNING),
+            ("24 HOURS",   "Audit firewall rules — remove any overly permissive allow rules.",         Palette.WARNING),
+            ("LONG TERM",  "Schedule regular network vulnerability scans to find exposed services.",   Palette.SUCCESS),
+            ("LONG TERM",  "Segment the network to limit lateral visibility between zones.",           Palette.SUCCESS),
+        ],
+        "R2L": [
+            ("IMMEDIATE",  "Lock or reset credentials for all accounts targeted in this event.",       Palette.ERROR),
+            ("IMMEDIATE",  "Terminate all active sessions for the affected user accounts.",            Palette.ERROR),
+            ("IMMEDIATE",  "Block the source IP at the perimeter firewall.",                           Palette.ERROR),
+            ("24 HOURS",   "Enforce multi-factor authentication on all remote access services.",       Palette.WARNING),
+            ("24 HOURS",   "Audit SSH authorized_keys and remove any unrecognized public keys.",       Palette.WARNING),
+            ("LONG TERM",  "Implement account lockout policy after 5 failed authentication attempts.", Palette.SUCCESS),
+            ("LONG TERM",  "Deploy a SIEM rule to alert on repeated failed logins across accounts.",   Palette.SUCCESS),
+        ],
+        "U2R": [
+            ("IMMEDIATE",  "Isolate the affected host from the network immediately.",                  Palette.ERROR),
+            ("IMMEDIATE",  "Revoke all sudo and elevated privileges for the involved user.",           Palette.ERROR),
+            ("IMMEDIATE",  "Check /etc/passwd and /etc/sudoers for unauthorized new entries.",         Palette.ERROR),
+            ("IMMEDIATE",  "Forensic image the disk before any remediation to preserve evidence.",     Palette.ERROR),
+            ("24 HOURS",   "Audit all cron jobs, startup scripts, and systemd services for backdoors.",Palette.WARNING),
+            ("24 HOURS",   "Review all recently created or modified files on the compromised host.",   Palette.WARNING),
+            ("LONG TERM",  "Apply principle of least privilege — remove unnecessary sudo access.",     Palette.SUCCESS),
+            ("LONG TERM",  "Deploy file integrity monitoring (FIM) on critical system files.",         Palette.SUCCESS),
+        ],
+        "Normal": [
+            ("INFO",       "No threat detected. Continue routine monitoring.",                         Palette.SUCCESS),
+            ("INFO",       "Verify this event matches expected behaviour for this host and user.",      Palette.SUCCESS),
+        ],
+    }
+
+    _RECOMMENDATIONS_DEFAULT = [
+        ("IMMEDIATE",  "Investigate the event manually — unknown attack pattern detected.",            Palette.ERROR),
+        ("24 HOURS",   "Cross-reference with threat intelligence feeds for this source IP.",           Palette.WARNING),
+        ("LONG TERM",  "Update detection signatures to cover this pattern.",                           Palette.SUCCESS),
+    ]
+ 
     SEV_COLOR = {
         "CRITICAL": Palette.ERROR,
         "HIGH":     Palette.ERROR,
@@ -242,7 +281,6 @@ class EventDetailPanel(tk.Toplevel):
         expl = e.get("explanation", {})
         bg   = Palette.SURFACE
 
-        # ── event header ──────────────────────────────────────────────
         status    = e.get("status", "UNKNOWN").upper()
         sev_color = self.SEV_COLOR.get(status, Palette.ON_SURFACE_VAR)
         score     = int(float(e.get("score", 0)) * 100)
@@ -251,7 +289,6 @@ class EventDetailPanel(tk.Toplevel):
                        padx=Palette.PAD_LG, pady=Palette.PAD_MD)
         hdr.pack(fill="x")
 
-        # status badge
         tk.Label(hdr, text=f"● {status}",
                  font=Palette.bold(Palette.TITLE_LG),
                  fg=sev_color,
@@ -281,7 +318,6 @@ class EventDetailPanel(tk.Toplevel):
 
         tk.Frame(p, height=1, bg=Palette.OUTLINE).pack(fill="x")
 
-        # ── verdict ───────────────────────────────────────────────────
         verdict = expl.get("verdict", e.get("lime", ""))
         if verdict:
             self._section(p, "VERDICT")
@@ -295,7 +331,6 @@ class EventDetailPanel(tk.Toplevel):
                      bg=Palette.SURFACE_CONTAINER,
                      wraplength=580, justify="left").pack(anchor="w")
 
-        # ── top features (SHAP + LIME) ────────────────────────────────
         top_features = expl.get("top_features", [])
         if top_features:
             self._section(p, "FEATURE CONTRIBUTIONS  (SHAP + LIME)")
@@ -361,7 +396,6 @@ class EventDetailPanel(tk.Toplevel):
                              anchor="w").pack(fill="x",
                                               pady=(Palette.PAD_XS, 0))
 
-        # ── counterfactuals ───────────────────────────────────────────
         cf_list = expl.get("counter_factuals", [])
         if cf_list:
             self._section(p, "COUNTERFACTUAL ANALYSIS")
@@ -397,7 +431,6 @@ class EventDetailPanel(tk.Toplevel):
                          wraplength=560, justify="left").pack(
                     anchor="w", pady=(2, 0))
 
-        # ── raw evidence ──────────────────────────────────────────────
         raw = expl.get("raw_evidence", {})
         if raw:
             self._section(p, "RAW EVIDENCE")
@@ -429,7 +462,10 @@ class EventDetailPanel(tk.Toplevel):
                          fg=Palette.PRIMARY
                          if "IP" in label else Palette.ON_SURFACE,
                          bg=Palette.SURFACE_CONTAINER).pack(side="left")
-
+                
+                
+        self._build_recommendations(p)
+        
         tk.Frame(p, height=Palette.PAD_XL, bg=bg).pack()
 
     def _section(self, parent, title: str):
@@ -440,6 +476,177 @@ class EventDetailPanel(tk.Toplevel):
                  font=Palette.bold(Palette.MICRO),
                  fg=Palette.ON_SURFACE_VAR,
                  bg=Palette.SURFACE_LOW).pack(anchor="w")
+        
+    def _build_recommendations(self, parent):
+        e  = self._event
+        event_type = e.get("type", e.get("event_type", "")).strip()
+
+        _FAMILY_MAP = {
+            "SSH Brute Force":      "R2L",
+            "Lateral Movement":     "R2L",
+            "Data Exfiltration":    "R2L",
+            "Elevated Privileges":  "U2R",
+            "Privilege Escalation": "U2R",
+            "C2 Beaconing":         "R2L",
+            "DoS":                  "DoS",
+            "Probe":                "Probe",
+            "R2L":                  "R2L",
+            "U2R":                  "U2R",
+            "Normal":               "Normal",
+        }
+
+        family = _FAMILY_MAP.get(event_type, event_type)
+        recs   = self._RECOMMENDATIONS.get(family, self._RECOMMENDATIONS_DEFAULT)
+
+        self._section(parent, "RECOMMENDED ACTIONS")
+
+        container = tk.Frame(parent, bg=Palette.SURFACE,
+                            padx=Palette.PAD_LG, pady=Palette.PAD_SM)
+        container.pack(fill="x", pady=(0, Palette.PAD_MD))
+
+        # urgency config: (badge_bg, badge_fg, row_bg, row_border)
+        _URGENCY_STYLE = {
+            "IMMEDIATE": (Palette.ERROR,   Palette.SURFACE, Palette.SURFACE,    Palette.ERROR),
+            "24 HOURS":  (Palette.WARNING, Palette.SURFACE, Palette.SURFACE,    Palette.WARNING),
+            "LONG TERM": (Palette.SUCCESS, Palette.SURFACE, Palette.SURFACE,    Palette.SUCCESS),
+            "INFO":      (Palette.INFO,    Palette.SURFACE, Palette.SURFACE_LOW, Palette.INFO),
+        }
+
+        for i, (urgency, text, color) in enumerate(recs, start=1):
+            badge_bg, badge_fg, row_bg, border_color = _URGENCY_STYLE.get(
+                urgency,
+                (Palette.ON_SURFACE_VAR, Palette.SURFACE,
+                Palette.SURFACE_LOW, Palette.OUTLINE)
+            )
+
+            # outer wrapper for left border effect
+            wrapper = tk.Frame(container, bg=border_color)
+            wrapper.pack(fill="x", pady=2)
+
+            row = tk.Frame(
+                wrapper,
+                bg=Palette.SURFACE_CONTAINER,
+                padx=Palette.PAD_MD,
+                pady=Palette.PAD_SM,
+            )
+            row.pack(fill="x", padx=(3, 0))  # 3px left border visible
+
+            # step number
+            tk.Label(
+                row,
+                text=f"{i:02d}",
+                font=Palette.bold(Palette.LABEL_SM),
+                fg=border_color,
+                bg=Palette.SURFACE_CONTAINER,
+                width=3,
+                anchor="w",
+            ).pack(side="left")
+
+            # urgency badge
+            badge = tk.Frame(row, bg=badge_bg, padx=8, pady=2)
+            badge.pack(side="left", padx=(0, Palette.PAD_MD))
+            tk.Label(
+                badge,
+                text=urgency,
+                font=Palette.bold(Palette.MICRO),
+                fg=badge_fg,
+                bg=badge_bg,
+            ).pack()
+
+            # recommendation text
+            tk.Label(
+                row,
+                text=text,
+                font=Palette.font(Palette.LABEL_SM),
+                fg=Palette.ON_SURFACE,
+                bg=Palette.SURFACE_CONTAINER,
+                wraplength=500,
+                justify="left",
+                anchor="w",
+            ).pack(side="left", fill="x", expand=True)     
+        
+    # def _build_recommendations(self, parent):
+    #     e  = self._event
+    #     event_type  = e.get("type", e.get("event_type", "")).strip()
+
+    #     # map event_type to family
+    #     _FAMILY_MAP = {
+    #         "SSH Brute Force":       "R2L",
+    #         "Lateral Movement":      "R2L",
+    #         "Data Exfiltration":     "R2L",
+    #         "Elevated Privileges":   "U2R",
+    #         "Privilege Escalation":  "U2R",
+    #         "C2 Beaconing":          "R2L",
+    #         "DoS":                   "DoS",
+    #         "Probe":                 "Probe",
+    #         "R2L":                   "R2L",
+    #         "U2R":                   "U2R",
+    #         "Normal":                "Normal",
+    #     }
+
+    #     family = _FAMILY_MAP.get(event_type, event_type)
+    #     recs   = self._RECOMMENDATIONS.get(family, self._RECOMMENDATIONS_DEFAULT)
+
+    #     self._section(parent, "RECOMMENDED ACTIONS")
+
+    #     container = tk.Frame(parent, bg=Palette.SURFACE,
+    #                         padx=Palette.PAD_LG, pady=Palette.PAD_SM)
+    #     container.pack(fill="x", pady=(0, Palette.PAD_MD))
+
+    #     _URGENCY_BG = {
+    #         "IMMEDIATE": "#2a1515",
+    #         "24 HOURS":  "#2a2010",
+    #         "LONG TERM": "#152015",
+    #         "INFO":      "#151a2a",
+    #     }
+
+    #     for i, (urgency, text, color) in enumerate(recs, start=1):
+    #         row = tk.Frame(
+    #             container,
+    #             bg=_URGENCY_BG.get(urgency, Palette.SURFACE_CONTAINER),
+    #             padx=Palette.PAD_MD,
+    #             pady=Palette.PAD_SM,
+    #         )
+    #         row.pack(fill="x", pady=2)
+
+    #         # step number
+    #         tk.Label(
+    #             row,
+    #             text=f"{i:02d}",
+    #             font=Palette.bold(Palette.MICRO),
+    #             fg=color,
+    #             bg=_URGENCY_BG.get(urgency, Palette.SURFACE_CONTAINER),
+    #             width=3,
+    #             anchor="w",
+    #         ).pack(side="left")
+
+    #         # urgency badge
+    #         badge_frame = tk.Frame(
+    #             row,
+    #             bg=color,
+    #             padx=6,
+    #             pady=1,
+    #         )
+    #         badge_frame.pack(side="left", padx=(0, Palette.PAD_SM))
+    #         tk.Label(
+    #             badge_frame,
+    #             text=urgency,
+    #             font=Palette.bold(Palette.MICRO),
+    #             fg=Palette.SURFACE,
+    #             bg=color,
+    #         ).pack()
+
+    #         # recommendation text
+    #         tk.Label(
+    #             row,
+    #             text=text,
+    #             font=Palette.font(Palette.LABEL_SM),
+    #             fg=Palette.ON_SURFACE,
+    #             bg=_URGENCY_BG.get(urgency, Palette.SURFACE_CONTAINER),
+    #             wraplength=520,
+    #             justify="left",
+    #             anchor="w",
+    #         ).pack(side="left", fill="x", expand=True)    
 
     @staticmethod
     def _fmt_bytes(b: int) -> str:
@@ -452,7 +659,6 @@ class EventDetailPanel(tk.Toplevel):
         return f"{b:.1f} TB"
 
 
-# ── EventRow — replaces ThreatRow ────────────────────────────────────
 
 class EventRow(tk.Frame):
     """
@@ -544,7 +750,6 @@ class EventRow(tk.Frame):
                  bg=Palette.OUTLINE).pack(fill="x", padx=Palette.PAD_LG)
 
 
-# ── Log Selector Panel (unchanged) ───────────────────────────────────
 class LogSelectorPanel(tk.Frame):
     def __init__(self, parent, on_select=None, **kw):
         bg = kw.pop("bg", Palette.SURFACE_CONTAINER)
@@ -825,8 +1030,6 @@ class LogSelectorPanel(tk.Frame):
         return f"{b:.1f} TB"
 
 
-# ── Analysis Page ─────────────────────────────────────────────────────
-
 class AnalysisPage(tk.Frame):
 
     def __init__(self, parent, user=None,
@@ -868,14 +1071,13 @@ class AnalysisPage(tk.Frame):
     def _populate(self):
         p = self._inner
 
-        # ── header ───────────────────────────────────────────────────
         hdr = tk.Frame(p, bg=Palette.SURFACE)
         hdr.pack(fill="x", padx=Palette.PAD_XL,
                  pady=(Palette.PAD_LG, 0))
 
         title_block = tk.Frame(hdr, bg=Palette.SURFACE)
         title_block.pack(side="left")
-        tk.Label(title_block, text="Evidence Analysis",
+        tk.Label(title_block, text="Log Analysis",
                  font=Palette.bold(Palette.DISPLAY),
                  fg=Palette.ON_SURFACE,
                  bg=Palette.SURFACE).pack(anchor="w")
@@ -897,18 +1099,15 @@ class AnalysisPage(tk.Frame):
         self._run_btn.pack(side="left", ipady=4, ipadx=8)
         
         
-        # ── generate report button ────────────────────────────────────────
         self._gen_btn = GoldButton(btn_row, text="Generate Report",
                                     command=self._generate_report)
         self._gen_btn.pack(side="left", ipady=4, ipadx=8)
         self._gen_btn.config(state="disabled")   # enabled after analysis completes
 
-        # store last analysis id
         self._last_analysis_id = None
 
         tk.Frame(p, height=Palette.PAD_LG, bg=Palette.SURFACE).pack()
 
-        # ── two-col layout ───────────────────────────────────────────
         cols = tk.Frame(p, bg=Palette.SURFACE)
         cols.pack(fill="x", padx=Palette.PAD_XL)
         cols.columnconfigure(0, weight=1)
@@ -1009,7 +1208,6 @@ class AnalysisPage(tk.Frame):
         tk.Frame(right, height=Palette.PAD_MD,
                  bg=Palette.SURFACE_CONTAINER).pack()
 
-        # ── events section ────────────────────────────────────────────
         tk.Frame(p, height=Palette.PAD_LG, bg=Palette.SURFACE).pack()
 
         events_card = tk.Frame(p, bg=Palette.SURFACE_CONTAINER)
@@ -1107,19 +1305,20 @@ class AnalysisPage(tk.Frame):
 
     def _do_analysis(self, log_id: int):
         try:
-            result = api("post", f"/analysis/run?log_id={log_id}")
+            result = api("post", f"/analysis/run?log_id={log_id}", timeout=(10, 300))
             self.after(0, lambda: self._on_result(result))
         except requests.HTTPError as exc:
             try:
-                msg = exc.response.json().get("detail",
-                                               "Analysis failed.")
+                msg = exc.response.json().get("detail", "Analysis failed.")
+                print(exc.response)
             except Exception:
-                msg = f"Server error ({exc.response.status_code})"
-            self.after(0, lambda: self._on_error(msg))
+                msg = f"Server error ({exc.response.status_code}) {exc.response.m}"
+            self.after(0, lambda m=msg: self._on_error(m))
         except requests.ConnectionError:
             self.after(0, lambda: self._on_error("Cannot reach server."))
         except Exception as exc:
-            self.after(0, lambda: self._on_error(str(exc)))
+            msg = str(exc)
+            self.after(0, lambda m=msg: self._on_error(m))
 
 
     def _generate_report(self):

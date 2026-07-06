@@ -132,9 +132,9 @@ def clear_token():
     session.headers.pop("Authorization", None)
 
 
-def api(method: str, path: str, **kwargs) -> dict:
+def api(method: str, path: str, timeout=(10, 30), **kwargs) -> dict:
     url  = BASE_URL.rstrip("/") + path
-    resp = session.request(method.upper(), url, timeout=10, **kwargs)
+    resp = session.request(method.upper(), url, timeout=timeout, **kwargs)
     resp.raise_for_status()
     return resp.json()
 

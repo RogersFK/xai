@@ -9,7 +9,7 @@
 
 # class AnalysisPage(tk.Frame):
 #     """
-#     Evidence Analysis page.
+#     Log Analysis page.
 #     Assembles TopBar (excluded here, handled by App), and the body.
 #     """
 
@@ -94,7 +94,7 @@
 
 #         title_block = tk.Frame(hdr, bg=Palette.SURFACE)
 #         title_block.pack(side="left")
-#         tk.Label(title_block, text="Evidence Analysis",
+#         tk.Label(title_block, text="Log Analysis",
 #                  font=Palette.bold(Palette.DISPLAY),
 #                  fg=Palette.ON_SURFACE,
 #                  bg=Palette.SURFACE).pack(anchor="w")
@@ -325,7 +325,7 @@ class AnalysisPage(tk.Frame):
 
         title_block = tk.Frame(hdr, bg=Palette.SURFACE)
         title_block.pack(side="left")
-        tk.Label(title_block, text="Evidence Analysis",
+        tk.Label(title_block, text="Log Analysis",
                  font=Palette.bold(Palette.DISPLAY),
                  fg=Palette.ON_SURFACE,
                  bg=Palette.SURFACE).pack(anchor="w")

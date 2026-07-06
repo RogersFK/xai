@@ -2,12 +2,9 @@ from colors import Palette
 import tkinter as tk
 
 class SideNav(tk.Frame):
-    # ITEMS  = [("Dashboard","▣"),("Upload Logs","↑"),
-    #            ("Analysis","◈"),("Reports","☰"),("Settings","⚙")]
-    # BOTTOM = [("Profile","👤"),("Support","?"),("Logout","↩")] 
     
     ITEMS  = [("Dashboard","▣"),("Upload Logs","↑"),
-               ("Analysis","◈"),("Reports","☰"),]
+               ("Analysis","◈"),("Reports","☰"),("Decrypt","🔓"),]
     BOTTOM = [("Profile","👤"),("Logout","↩")] 
 
     def __init__(self, parent, active="Dashboard", on_navigate=None, is_admin=False, **kw):
@@ -42,7 +39,7 @@ class SideNav(tk.Frame):
 
         inf = tk.Frame(card, bg=Palette.SURFACE_CONTAINER)
         inf.pack(side="left")
-        tk.Label(inf, text="Forensic Node",
+        tk.Label(inf, text="Log Analysis Node",
                 font=Palette.bold(Palette.LABEL),
                 fg=Palette.ON_SURFACE,
                 bg=Palette.SURFACE_CONTAINER).pack(anchor="w")

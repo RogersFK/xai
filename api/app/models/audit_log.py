@@ -17,5 +17,4 @@ class AuditLog(Base):
     payload       = Column(JSON,        nullable=True)
     ip_address    = Column(String(64),  default="")
     created_at    = Column(DateTime, default=datetime.utcnow, index=True)
- 
     user = relationship("User", back_populates="audit_logs")

@@ -82,9 +82,8 @@ class DashedBorderCanvas(tk.Canvas):
         self._draw()
 
 
-# ── DropZoneUpload (unchanged) ────────────────────────────────────────
 class DropZoneUpload(tk.Frame):
-    ACCEPTED_EXT = [".json", ".csv", ".pcap", ".log"]
+    ACCEPTED_EXT = [".log"]
 
     def __init__(self, parent, on_file_selected=None, **kw):
         bg = kw.pop("bg", Palette.SURFACE_CONTAINER)
@@ -140,19 +139,24 @@ class DropZoneUpload(tk.Frame):
         btn_row = tk.Frame(inner, bg=self._bg)
         btn_row.pack(pady=(Palette.PAD_SM, Palette.PAD_LG))
 
-        GoldButton(btn_row, text="Browse Files",
-                   command=self._browse).pack(
-            side="left", ipady=8, ipadx=20,
-            padx=(0, Palette.PAD_MD))
+        GoldButton(
+            btn_row, 
+            text="Browse Files",
+            command=self._browse).pack(
+            side="left", 
+            ipady=8, 
+            ipadx=20,
+            padx=(0, Palette.PAD_MD)
+        )
 
-        self._index_btn = GoldButton(btn_row, text="Start Indexing",
+        self._index_btn = GoldButton(btn_row, text="Upload file",
                                      command=self._start_indexing)
         self._index_btn.pack(side="left", ipady=8, ipadx=20)
         self._index_btn.config(state="disabled")
 
         chips = tk.Frame(inner, bg=self._bg)
         chips.pack(pady=(0, Palette.PAD_XL))
-        for ext in [".JSON", ".CSV", ".PCAP", ".LOG"]:
+        for ext in [".LOG"]:
             tk.Label(chips, text=ext,
                      font=Palette.bold(Palette.LABEL),
                      fg=Palette.ON_SURFACE_VAR,
@@ -261,7 +265,7 @@ class DropZoneUpload(tk.Frame):
 
     def _on_upload_done(self, succeeded: list, failed: list):
         self._selected_files = []
-        self._index_btn.config(state="disabled", text="Start Indexing")
+        self._index_btn.config(state="disabled", text="Upload file")
         if succeeded and not failed:
             self._file_label.config(
                 text=f"✓ {len(succeeded)} file(s) uploaded successfully.",
@@ -278,7 +282,6 @@ class DropZoneUpload(tk.Frame):
             self._recent.refresh()
 
 
-# ── IngestionItem — updated to show new fields ────────────────────────
 
 class IngestionItem(tk.Frame):
     STATUS_MAP = {
@@ -325,7 +328,6 @@ class IngestionItem(tk.Frame):
                     else Palette.ERROR,
                  bg=icon_bg).place(relx=.5, rely=.5, anchor="center")
 
-        # ── pack status chip RIGHT first ──────────────────────────────
         col, dot = self.STATUS_MAP.get(status,
                                        (Palette.ON_SURFACE_VAR, "●"))
         chip = tk.Frame(row, bg=bg)
@@ -346,7 +348,6 @@ class IngestionItem(tk.Frame):
                      bg=bg).pack(side="right",
                                   padx=(0, Palette.PAD_SM))
 
-        # ── left: filename + meta ─────────────────────────────────────
         info = tk.Frame(row, bg=bg)
         info.pack(side="left", fill="x", expand=True)
 
@@ -355,7 +356,6 @@ class IngestionItem(tk.Frame):
                  fg=Palette.ON_SURFACE,
                  bg=bg, anchor="w").pack(fill="x")
 
-        # meta row: size • date • source • format
         meta_parts = [size, date]
         if log_source:
             meta_parts.append(log_source)
@@ -394,7 +394,6 @@ class IngestionItem(tk.Frame):
             return str(iso)[:10]
 
 
-# ── RecentIngestion — updated to use new LogFileOut fields ────────────
 
 class RecentIngestion(tk.Frame):
 
@@ -528,7 +527,6 @@ class RecentIngestion(tk.Frame):
         return f"{b:.1f} PB"
 
 
-# ── FeatureCard (unchanged) ───────────────────────────────────────────
 
 class FeatureCard(tk.Frame):
     def __init__(self, parent, tag, title, body, **kw):
@@ -556,7 +554,6 @@ class FeatureCard(tk.Frame):
             anchor="w", pady=(Palette.PAD_SM, 0))
 
 
-# ── StatusBar (unchanged) ─────────────────────────────────────────────
 
 class StatusBar(tk.Frame):
     def __init__(self, parent, **kw):
@@ -591,7 +588,6 @@ class StatusBar(tk.Frame):
             side="right", padx=Palette.PAD_LG)
 
 
-# ── UploadLogsPage (unchanged structure) ─────────────────────────────
 
 class UploadLogsPage(tk.Frame):
     def __init__(self, parent, user=None,
@@ -614,7 +610,7 @@ class UploadLogsPage(tk.Frame):
         hdr = tk.Frame(p, bg=Palette.SURFACE)
         hdr.pack(fill="x", padx=Palette.PAD_XL,
                  pady=(Palette.PAD_LG, 0))
-        tk.Label(hdr, text="Evidence Ingestion",
+        tk.Label(hdr, text="Network Log Ingestion",
                  font=(Palette._FONT[0], Palette.DISPLAY, "bold"),
                  fg=Palette.ON_SURFACE,
                  bg=Palette.SURFACE).pack(anchor="w")
@@ -653,16 +649,16 @@ class UploadLogsPage(tk.Frame):
                     body=("Every bit of uploaded data is hashed "
                           "and anchored to the forensic chain of custody."),
                     bg=Palette.SURFACE_CONTAINER).grid(
-            row=1, column=0, sticky="nsew",
+            row=1, column=0, columnspan=2, sticky="nsew",
             padx=(0, Palette.PAD_SM))
 
-        FeatureCard(left,
-                    tag="Processing Power",
-                    title="Neural Indexing",
-                    body=("Automated classification of suspicious patterns "
-                          "using sovereign AI protocols."),
-                    bg=Palette.SURFACE_CONTAINER).grid(
-            row=1, column=1, sticky="nsew")
+        # FeatureCard(left,
+        #             tag="Processing Power",
+        #             title="Neural Indexing",
+        #             body=("Automated classification of suspicious patterns "
+        #                   "using sovereign AI protocols."),
+        #             bg=Palette.SURFACE_CONTAINER).grid(
+        #     row=1, column=1, sticky="nsew")
 
         self._recent = RecentIngestion(cols, bg=Palette.SURFACE_CONTAINER)
         self._recent.grid(row=0, column=1, sticky="nsew")

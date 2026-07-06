@@ -5,7 +5,7 @@ from colors import Palette
 
 class TopBar(tk.Frame):
     def __init__(self, parent,
-                 title: str = "XAI Digital Forensics System",
+                 title: str = "XAI Network Logs Analysis System",
                  role: str = "L3 Authority",
                  agent: dict = None,
                  search_placeholder: str = "Search evidence...",
@@ -86,7 +86,6 @@ class TopBar(tk.Frame):
                  fg=on_var, bg=bg,
                  cursor="hand2").pack(side="right", padx=(0, 14))
 
-        # ── search bar ───────────────────────────────────────────────
         sf = tk.Frame(self, bg=surf_hgh,
                       highlightbackground=outline,
                       highlightthickness=1)

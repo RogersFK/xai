@@ -11,7 +11,6 @@ import random
 log = get_logger("DASHBOARD")
 
 class SecurityCoreCanvas(tk.Canvas):
-    """Animated circuit board / security core visual."""
     def __init__(self, parent, **kw):
         bg = kw.pop("bg", Palette.SURFACE_HIGH)
         super().__init__(parent, bg=bg, height=120,
@@ -77,7 +76,6 @@ class SecurityCoreCanvas(tk.Canvas):
                          font=Palette.font(Palette.MICRO),
                          fill=Palette.ON_SURFACE_VAR, anchor="w")
 
-# ── StatCard ──────────────────────────────────────────────────────────
 
 class StatCard(tk.Frame):
     def __init__(self, parent, icon="▣", badge="", badge_color=None,
@@ -118,7 +116,6 @@ class StatCard(tk.Frame):
                              pady=(0, Palette.PAD_LG))
 
 
-# ── UserAvatar ────────────────────────────────────────────────────────
 
 class UserAvatar(tk.Canvas):
     def __init__(self, parent, initials="??", bg_color=None, **kw):
@@ -144,7 +141,6 @@ class UserAvatar(tk.Canvas):
                          fill=Palette.ON_SURFACE_VAR)
 
 
-# ── LiveFeedRow ───────────────────────────────────────────────────────
 
 class LiveFeedRow(tk.Frame):
     SEVERITY_COLORS = {
@@ -220,7 +216,6 @@ class LiveFeedRow(tk.Frame):
                  bg=Palette.OUTLINE).pack(fill="x", padx=Palette.PAD_LG)
 
 
-# ── LiveFeed ──────────────────────────────────────────────────────────
 
 class LiveFeed(tk.Frame):
     def __init__(self, parent, **kw):
@@ -311,7 +306,6 @@ class LiveFeed(tk.Frame):
                  bg=self._bg).pack(pady=Palette.PAD_LG)
 
 
-# ── ModelDistBar ──────────────────────────────────────────────────────
 
 class ModelDistBar(tk.Frame):
     def __init__(self, parent, label, pct, **kw):
@@ -335,7 +329,6 @@ class ModelDistBar(tk.Frame):
                                  relheight=1)
 
 
-# ── NodeIntelPanel ────────────────────────────────────────────────────
 
 class NodeIntelPanel(tk.Frame):
     def __init__(self, parent, **kw):
@@ -425,13 +418,12 @@ class NodeIntelPanel(tk.Frame):
 
         tk.Frame(self, height=1, bg=Palette.OUTLINE).pack(fill="x")
 
-        # export button
-        btn_frame = tk.Frame(self, bg=self._bg,
-                             padx=Palette.PAD_MD, pady=Palette.PAD_MD)
-        btn_frame.pack(fill="x")
-        GoldButton(btn_frame, text="Export System Log",
-                   icon="↓", style="outline").pack(
-            fill="x", ipady=6)
+        # btn_frame = tk.Frame(self, bg=self._bg,
+        #                      padx=Palette.PAD_MD, pady=Palette.PAD_MD)
+        # btn_frame.pack(fill="x")
+        # GoldButton(btn_frame, text="Export System Log",
+        #            icon="↓", style="outline").pack(
+        #     fill="x", ipady=6)
 
     def render(self, node_intel: dict):
         """Called after API load to populate model info."""
@@ -465,7 +457,6 @@ class NodeIntelPanel(tk.Frame):
             w.destroy()
 
 
-# ── DashboardPage ─────────────────────────────────────────────────────
 
 class DashboardPage(tk.Frame):
     def __init__(self, parent, user=None,
@@ -480,7 +471,6 @@ class DashboardPage(tk.Frame):
         self._tick_clock()
         self._load()                 # fetch from backend on mount
 
-    # ── layout ────────────────────────────────────────────────────────
 
     def _build(self):
         self.columnconfigure(0, weight=1)
@@ -521,7 +511,6 @@ class DashboardPage(tk.Frame):
         self._node_panel.grid(row=0, column=1, sticky="nsew")
 
     def _populate_main(self, p):
-        # ── page header ───────────────────────────────────────────────
         hdr = tk.Frame(p, bg=Palette.SURFACE)
         hdr.pack(fill="x", padx=Palette.PAD_XL,
                  pady=(Palette.PAD_LG, 0))
@@ -551,7 +540,6 @@ class DashboardPage(tk.Frame):
         tk.Frame(p, height=Palette.PAD_LG,
                  bg=Palette.SURFACE).pack()
 
-        # ── stat cards ────────────────────────────────────────────────
         cards_row = tk.Frame(p, bg=Palette.SURFACE)
         cards_row.pack(fill="x", padx=Palette.PAD_XL)
         cards_row.columnconfigure(0, weight=1)
@@ -583,7 +571,6 @@ class DashboardPage(tk.Frame):
         tk.Frame(p, height=Palette.PAD_LG,
                  bg=Palette.SURFACE).pack()
 
-        # ── live feed ─────────────────────────────────────────────────
         feed_card = tk.Frame(p, bg=Palette.SURFACE_CONTAINER)
         feed_card.pack(fill="x", padx=Palette.PAD_XL)
 
@@ -657,7 +644,6 @@ class DashboardPage(tk.Frame):
         val_lbl._badge_lbl = badge_lbl
         return val_lbl
 
-    # ── data loading ──────────────────────────────────────────────────
 
     def _load(self):
         threading.Thread(target=self._fetch, daemon=True).start()
@@ -680,7 +666,6 @@ class DashboardPage(tk.Frame):
         intel     = data.get("node_intel",  {})
         total     = data.get("total_feed_count", 0)
 
-        # ── stat cards ────────────────────────────────────────────────
         change = stats.get("suspicious_change_pct", 0)
         change_str = (f"+{change:.1f}%" if change >= 0
                       else f"{change:.1f}%")
@@ -703,10 +688,8 @@ class DashboardPage(tk.Frame):
         self._card_normal.config(
             text=f"{stats.get('normal_events', 0):,}")
 
-        # ── live feed ─────────────────────────────────────────────────
         self._live_feed.render(feed, total)
 
-        # ── node intel ────────────────────────────────────────────────
         self._node_panel.render(intel)
 
         log.debug("Dashboard loaded — %d feed events, %d total",
@@ -720,7 +703,6 @@ class DashboardPage(tk.Frame):
         self._live_feed.set_error(msg)
         self._node_panel.set_error(msg)
 
-    # ── clock + blink ─────────────────────────────────────────────────
 
     def _tick_clock(self):
         if self._clock_label and self._clock_label.winfo_exists():

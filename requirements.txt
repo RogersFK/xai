@@ -6,3 +6,10 @@ python-multipart>=0.0.9
 aiofiles>=23.2.1
 requests>=2.31.0
 python-jose[cryptography]>=3.3.0
+numpy
+Pillow
+scikit-learn
+shap
+reportlab 
+cryptography
+pymupdf
